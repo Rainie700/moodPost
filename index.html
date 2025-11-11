@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>樹洞投稿 — Mood Post-it Bot</title>
+  <style>
+    :root{
+      --brown-900:#3e2723;
+      --brown-700:#5d4037;
+      --brown-500:#8d6e63;
+      --brown-300:#d7ccc8;
+      --cream:#efebe9;
+      --accent:#b68f6a;
+      --glass: rgba(255,255,255,0.6);
+      --card-shadow: 0 6px 18px rgba(46,40,38,0.12);
+      font-family: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background: linear-gradient(180deg, var(--cream), #fbf7f5 60%);
+      color:var(--brown-900);
+      -webkit-font-smoothing:antialiased;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .container{
+      width:100%;
+      max-width:920px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.9));
+      border-radius:16px;
+      box-shadow: var(--card-shadow);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap:20px;
+      padding:22px;
+    }
+
+    /* mobile */
+    @media (max-width:880px){
+      .container{grid-template-columns:1fr; padding:16px;}
+    }
+
+    /* Left: form + info */
+    .left{
+      padding:8px 14px;
+    }
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .logo{
+      width:56px;
+      height:56px;
+      border-radius:12px;
+      background:linear-gradient(135deg,var(--brown-700),var(--accent));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--cream);
+      font-weight:700;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+      flex:0 0 56px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:18px;
+      color:var(--brown-900);
+      line-height:1;
+    }
+    .brand p{margin:0;font-size:13px;color:var(--brown-500);}
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.6), var(--glass));
+      border-radius:12px;
+      padding:12px;
+      margin-top:12px;
+      box-shadow: 0 4px 12px rgba(14,10,8,0.05);
+    }
+
+    label{display:block;font-size:13px;margin-bottom:6px;color:var(--brown-700);}
+    input[type="text"], textarea, select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(93,64,55,0.12);
+      background:transparent;
+      font-size:14px;
+      resize:vertical;
+      color:var(--brown-900);
+    }
+    textarea{min-height:120px; max-height:360px;}
+    .row{display:flex;gap:8px;align-items:center;}
+    .small{font-size:12px;color:var(--brown-500);}
+
+    .actions{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+    }
+    button{
+      border:0;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+      box-shadow: 0 6px 12px rgba(90,60,45,0.06);
+    }
+    .btn-primary{
+      background: linear-gradient(90deg,var(--brown-700),var(--accent));
+      color:var(--cream);
+    }
+    .btn-ghost{
+      background:transparent;
+      color:var(--brown-700);
+      border:1px dashed rgba(93,64,55,0.12);
+    }
+
+    /* Right: posts list */
+    .right{
+      padding:8px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .right h2{margin:0;font-size:16px;color:var(--brown-700);}
+    .posts{
+      overflow:auto;
+      max-height:520px;
+      padding-right:6px;
+    }
+    .post{
+      background:linear-gradient(180deg,#fff, var(--brown-300, #f3ebe6));
+      border-radius:10px;
+      padding:10px;
+      margin-bottom:10px;
+      box-shadow: 0 4px 10px rgba(24,18,15,0.04);
+      border-left:6px solid rgba(93,64,55,0.12);
+    }
+    .post .meta{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      margin-bottom:6px;
+    }
+    .tag{
+      background:rgba(93,64,55,0.08);
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--brown-700);
+    }
+    .post p{margin:0;color:var(--brown-900);white-space:pre-wrap;}
+    .post small{color:var(--brown-500);font-size:12px}
+
+    .empty{
+      color:var(--brown-500);
+      font-size:14px;
+      padding:18px;
+      text-align:center;
+    }
+
+    footer.note{
+      text-align:center;
+      font-size:12px;color:var(--brown-500);
+      margin-top:auto;padding-top:8px;
+    }
+
+    /* tiny helper */
+    .flex-between{display:flex;justify-content:space-between;align-items:center;}
+    .muted{color:var(--brown-500);font-size:12px;}
+    .danger{background:#ffefe9;color:#7a2918;padding:6px 8px;border-radius:8px;border:0;font-weight:600;}
+  </style>
+</head>
+<body>
+  <main class="container" role="main">
+    <section class="left" aria-labelledby="form-title">
+      <div class="brand">
+        <div class="logo">貼</div>
+        <div>
+          <h1 id="form-title">樹洞投稿 — Mood Post-it Bot</h1>
+          <p>匿名分享你的心情 / 小秘密，安全溫柔的空間。</p>
+        </div>
+      </div>
+
+      <div class="card" aria-live="polite">
+        <label for="mood">心情標籤</label>
+        <select id="mood" aria-label="選擇心情">
+          <option value="neutral">隨便 / 中立</option>
+          <option value="happy">開心 😊</option>
+          <option value="sad">難過 😢</option>
+          <option value="stress">焦慮 😰</option>
+          <option value="love">戀愛 💕</option>
+          <option value="angry">生氣 😠</option>
+          <option value="other">其他</option>
+        </select>
+
+        <label for="nickname" style="margin-top:10px;">暱稱（可空白，勾選匿名則不顯示）</label>
+        <input id="nickname" type="text" placeholder="例如：微光 / 小樹洞客" />
+
+        <label for="content" style="margin-top:10px;">你的樹洞</label>
+        <textarea id="content" placeholder="把你想說的寫下來，這裡很安全。不要留下真實聯絡方式喔。"></textarea>
+
+        <div class="row" style="margin-top:8px;">
+          <input id="anonymous" type="checkbox" checked />
+          <label for="anonymous" style="margin:0;font-size:13px;color:var(--brown-700);">匿名發布</label>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" id="btnPost">發送到樹洞</button>
+          <button class="btn-ghost" id="btnClear">清除表單</button>
+          <button class="btn-ghost" id="btnExport" title="輸出本機資料 (JSON)">匯出</button>
+        </div>
+
+        <p class="small" style="margin-top:8px;">提示：此 Demo 頁面會把投稿存於你自己的瀏覽器（localStorage）。若要收集到伺服器或資料庫，我可以再幫你把後端範例程式碼一起做出來。</p>
+      </div>
+
+    </section>
+
+    <aside class="right" aria-labelledby="list-title">
+      <div class="flex-between">
+        <h2 id="list-title">最新樹洞</h2>
+        <div class="muted">共 <span id="count">0</span> 則</div>
+      </div>
+
+      <div class="posts" id="postsList" tabindex="0" aria-live="polite">
+        <div class="empty" id="empty">目前還沒有投稿，成為第一個分享的人吧 🌱</div>
+      </div>
+
+      <footer class="note">
+        本系統為匿名分享示範。若內容涉及自傷/危險，請立即聯絡當地緊急服務或專業資源。
+      </footer>
+    </aside>
+  </main>
+
+  <script>
+    // 小型投稿系統（client-only）
+    const el = {
+      mood: document.getElementById('mood'),
+      nick: document.getElementById('nickname'),
+      content: document.getElementById('content'),
+      anonymous: document.getElementById('anonymous'),
+      btnPost: document.getElementById('btnPost'),
+      btnClear: document.getElementById('btnClear'),
+      btnExport: document.getElementById('btnExport'),
+      postsList: document.getElementById('postsList'),
+      empty: document.getElementById('empty'),
+      count: document.getElementById('count')
+    };
+
+    const STORAGE_KEY = 'mood_postit_posts_v1';
+
+    function loadPosts(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){
+        console.error(e);
+        return [];
+      }
+    }
+
+    function savePosts(arr){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+
+    function renderPosts(){
+      const posts = loadPosts();
+      el.count.textContent = posts.length;
+      el.postsList.innerHTML = '';
+      if(posts.length === 0){
+        el.postsList.appendChild(el.empty);
+        return;
+      }
+      posts.slice().reverse().forEach((p, idx) => {
+        const node = document.createElement('article');
+        node.className = 'post';
+        node.setAttribute('data-id', p.id);
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const left = document.createElement('div');
+        left.innerHTML = '<span class="tag">'+ (p.moodLabel || '隨便') +'</span>';
+        const right = document.createElement('div');
+        right.innerHTML = '<small>'+ new Date(p.t).toLocaleString() +'</small>';
+        meta.appendChild(left);
+        meta.appendChild(right);
+
+        const body = document.createElement('p');
+        body.textContent = p.content;
+
+        const foot = document.createElement('div');
+        foot.style.marginTop='8px';
+        foot.style.display='flex';
+        foot.style.justifyContent='space-between';
+        foot.style.alignItems='center';
+
+        const author = document.createElement('small');
+        author.textContent = p.anonymous ? '匿名' : (p.nick || '訪客');
+
+        const btns = document.createElement('div');
+        btns.style.display='flex';
+        btns.style.gap='8px';
+        const del = document.createElement('button');
+        del.className='danger';
+        del.textContent='刪除';
+        del.addEventListener('click', ()=> {
+          if(!confirm('確定要刪除這則投稿？')) return;
+          const all = loadPosts().filter(x => x.id !== p.id);
+          savePosts(all);
+          renderPosts();
+        });
+
+        btns.appendChild(del);
+        foot.appendChild(author);
+        foot.appendChild(btns);
+
+        node.appendChild(meta);
+        node.appendChild(body);
+        node.appendChild(foot);
+
+        el.postsList.appendChild(node);
+      });
+    }
+
+    function addPost({mood, moodLabel, nick, content, anonymous}){
+      if(!content || content.trim().length < 2) {
+        alert('請輸入至少 2 個字的內容喔～');
+        return;
+      }
+      const posts = loadPosts();
+      posts.push({
+        id: 'p_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+        mood,
+        moodLabel,
+        nick: nick ? nick.trim().slice(0,20) : '',
+        content: content.trim(),
+        anonymous: !!anonymous,
+        t: Date.now()
+      });
+      savePosts(posts);
+      renderPosts();
+      // 清除內容但保留暱稱選項
+      el.content.value = '';
+      el.anonymous.checked = true;
+      // 讓使用者知道成功
+      alert('已發布到本機樹洞 🌱');
+    }
+
+    // events
+    el.btnPost.addEventListener('click', ()=> {
+      addPost({
+        mood: el.mood.value,
+        moodLabel: el.mood.options[el.mood.selectedIndex].text,
+        nick: el.nick.value,
+        content: el.content.value,
+        anonymous: el.anonymous.checked
+      });
+    });
+
+    el.btnClear.addEventListener('click', ()=> {
+      if(!confirm('要清空表單嗎？')) return;
+      el.mood.selectedIndex = 0;
+      el.nick.value = '';
+      el.content.value = '';
+      el.anonymous.checked = true;
+    });
+
+    el.btnExport.addEventListener('click', ()=> {
+      const posts = loadPosts();
+      const data = JSON.stringify(posts, null, 2);
+      const blob = new Blob([data], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mood_postit_posts.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // init
+    renderPosts();
+
+    // small accessibility: allow Ctrl+Enter to submit when typing
+    el.content.addEventListener('keydown', (e)=> {
+      if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+        el.btnPost.click();
+      }
+    });
+  </script>
+</body>
+</html>
